@@ -1,0 +1,11 @@
+# Ignore Docker Compose override file
+docker-compose.override.yml
+
+# Ignore build directory
+dist/
+
+# Ignore node_modules
+node_modules/
+
+# Ignore data directory
+data/

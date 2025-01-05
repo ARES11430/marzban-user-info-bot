@@ -1,0 +1,9 @@
+services:
+  mum-bot:
+    container_name: mum-bot
+    image: mum-bot:latest
+    build: .
+    network_mode: host
+    restart: always
+    volumes:
+      - ./data:/app/data

@@ -127,7 +127,7 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 
 ---
 
-## update to the latest version
+## Update to the latest version
 
 1. ** At the root of the project **
 2. **Update the Bot**:

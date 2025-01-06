@@ -7,7 +7,7 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 - **Admin Management**:
   - The main admin can manage settings, view all expiring users, and see all low-traffic users.
   - Additional admins can view their assigned users' details but cannot access other admins' user lists.
-- **User Details**:
+- **User Details and Info**:
   - Admins can see the traffic and expiration details of their assigned users.
   - To view their own user details, admins need to be added to the admin list.
 
@@ -95,6 +95,8 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 
 ## Running the Bot
 
+** At the root of the project **
+
 1. Start the bot in detached mode:
 
    ```bash
@@ -110,6 +112,8 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 
 ## Stopping and Restarting the Bot
 
+** At the root of the project **
+
 1. **Stop the Bot**:
 
    ```bash
@@ -120,6 +124,12 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
    ```bash
    docker compose up -d
    ```
+
+---
+
+## update to the latest version
+
+1. Simply stop and start docker compose at the root of the project.
 
 ---
 

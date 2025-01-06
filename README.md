@@ -129,7 +129,13 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 
 ## update to the latest version
 
-1. Simply stop and start docker compose at the root of the project.
+1. ** At the root of the project **
+2. **Update the Bot**:
+   ```bash
+   docker compose down
+   docker compose pull mum-bot
+   docker compose up -d
+   ```
 
 ---
 

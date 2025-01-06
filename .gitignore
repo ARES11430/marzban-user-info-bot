@@ -1,5 +1,7 @@
-# Ignore Docker Compose override file
+# Ignore Docker dev override files
 docker-compose.override.yml
+docker-compose.dev.yml
+Dockerfile.dev
 
 # Ignore build directory
 dist/

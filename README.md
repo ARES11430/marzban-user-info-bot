@@ -5,12 +5,15 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 ## Features
 
 - **Admin Management**:
-  - The main admin can manage settings, view all expiring users, and see all low-traffic users.
+  - The main admin is the Admin of Telegram bot and can manage settings, view all expiring users, and see all low-traffic users.
   - Additional admins can view their assigned users' details but cannot access other admins' user lists.
+  - The main admin also should add their info to admins list, in order to view their assigned users' details.
 - **User Details and Info**:
   - Admins can see the traffic and expiration details of their assigned users.
   - To view their own user details, admins need to be added to the admin list.
 
+![1](https://github.com/user-attachments/assets/9bb42a1c-be1a-4b9e-b928-993d87349b42)
+![2](https://github.com/user-attachments/assets/af96d86c-a8cd-47dc-9406-e48ff0ffc743)
 ---
 ## Run and Update Using Script
    ```bash

@@ -12,7 +12,11 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
   - To view their own user details, admins need to be added to the admin list.
 
 ---
-
+## Run and Update Using Script
+   ```bash
+   bash <(curl -Ls https://raw.githubusercontent.com/Argo160/mum/master/mum.sh)
+   ```
+---
 ## Prerequisites
 
 1. **Install Docker and Docker Compose**: (Skip, If already installed)
@@ -34,7 +38,8 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 
 ---
 
-## Configuration
+
+## Running Bot Using Pre-built Image From DockerHub
 
 1. **Create a Docker Compose File**:
    Create a `docker-compose.yml` file:
@@ -90,29 +95,22 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
    - `MUM_DB_PASSWORD`: MySQL database password.
    - `MUM_DB_NAME`: Name of the MySQL database.
    - `TZ`: Timezone for the bot (default is `UTC`, recommended to keep the default).
-
----
-
-## Running the Bot
-
-** At the root of the project **
-
-1. Start the bot in detached mode:
-
+  
+4. **Running the Bot**
    ```bash
    docker compose up -d
    ```
 
-2. View logs to ensure everything is working:
+5. **View logs to ensure everything is working:**
    ```bash
    docker compose logs -f
    ```
-
+   
 ---
 
 ## Stopping and Restarting the Bot
 
-** At the root of the project **
+**At the root of the project**
 
 1. **Stop the Bot**:
 
@@ -153,15 +151,44 @@ If you need to manually edit the bot's configuration file after deployment:
    ```bash
    nano ./data/config.json
    ```
-
+   
 ---
 
-## Future Improvements
+## Build Using Source code
 
-- Adding support for additional database systems.
-- Expanding bot functionality beyond traffic and expiration management.
+1. clone the project at desired directory
 
----
+2. **At the root of Project, Create an Override File for Environment Variables**:
+   Create a `docker-compose.override.yml` file:
+
+   ```bash
+   nano docker-compose.override.yml
+   ```
+
+   Paste the following content:
+
+   ```yaml
+   services:
+     mum-bot:
+      container_name: mum-bot
+      build:
+        context: .
+        dockerfile: Dockerfile
+    network_mode: host
+    restart: always
+    volumes:
+      - ./data:/app/data
+   ```
+   
+3. **Build and Running the Bot**
+   ```bash
+   docker compose up -d --build
+   ```
+
+4. **View logs to ensure everything is working:**
+   ```bash
+   docker compose logs -f
+   ```
 
 ### License
 

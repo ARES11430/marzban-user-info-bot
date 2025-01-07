@@ -118,7 +118,7 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 1. **Stop the Bot**:
 
    ```bash
-   docker compose down
+   docker compose stop
    ```
 
 2. **Restart the Bot**:
@@ -130,7 +130,7 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 
 ## Update to the latest version
 
-1. ** At the root of the project **
+1. **At the root of the project**
 2. **Update the Bot**:
    ```bash
    docker compose down
@@ -138,6 +138,16 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
    docker compose up -d
    ```
 
+---
+
+## Remove the Bot completely
+
+1. **At the root of the project**
+2. **Remove the Bot**:
+   ```bash
+   docker compose down -v
+   rm -rf /mum-bot
+   ```
 ---
 
 ## Manual Configuration Updates

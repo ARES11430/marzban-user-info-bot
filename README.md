@@ -17,7 +17,7 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 ---
 ## Run and Update Using Script
    ```bash
-   bash <(curl -Ls https://raw.githubusercontent.com/Argo160/mum/master/mum.sh)
+   bash <(curl -Ls https://raw.githubusercontent.com/ARES11430/marzban-user-management-bot/master/mum.sh)
    ```
 ---
 ## Prerequisites

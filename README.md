@@ -1,4 +1,4 @@
-# Marzban User Management (MUM) Bot
+# Marzban User Info (MUI) Bot
 
 This bot helps **Marzban Admin Panel** users by providing details about expiring and low-traffic users. It supports **MySQL** as its database.
 
@@ -14,12 +14,17 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 
 ![1](https://github.com/user-attachments/assets/9bb42a1c-be1a-4b9e-b928-993d87349b42)
 ![2](https://github.com/user-attachments/assets/af96d86c-a8cd-47dc-9406-e48ff0ffc743)
+
 ---
+
 ## Run and Update Using Script
-   ```bash
-   bash <(curl -Ls https://raw.githubusercontent.com/ARES11430/marzban-user-management-bot/master/mum.sh)
-   ```
+
+```bash
+bash <(curl -Ls https://raw.githubusercontent.com/ARES11430/marzban-user-info-bot/master/mui.sh)
+```
+
 ---
+
 ## Prerequisites
 
 1. **Install Docker and Docker Compose**: (Skip, If already installed)
@@ -41,15 +46,14 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 
 ---
 
-
 ## Running Bot Using Pre-built Image From DockerHub
 
 1. **Create a Docker Compose File**:
    Create a `docker-compose.yml` file:
 
    ```bash
-   mkdir mum-bot
-   cd mum-bot
+   mkdir mui-bot
+   cd mui-bot
    nano docker-compose.yml
    ```
 
@@ -57,9 +61,9 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 
    ```yaml
    services:
-     mum-bot:
-       container_name: mum-bot
-       image: ares11430/mum-bot:latest
+     mui-bot:
+       container_name: mui-bot
+       image: ares11430/mui-bot:latest
        network_mode: host
        restart: always
        volumes:
@@ -77,29 +81,31 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 
    ```yaml
    services:
-     mum-bot:
+     mui-bot:
        environment:
-         TELEGRAM_MUM_TOKEN: <YOUR_TELEGRAM_BOT_TOKEN>
-         TELEGRAM_MUM_MAIN_ADMIN_ID: <YOUR_TELEGRAM_USER_ID>
-         MUM_DB_HOST: 127.0.0.1
-         MUM_DB_USER: <DATABASE_USERNAME>
-         MUM_DB_PASSWORD: <DATABASE_PASSWORD>
-         MUM_DB_NAME: marzban
+         TELEGRAM_MUI_TOKEN: <YOUR_TELEGRAM_BOT_TOKEN>
+         TELEGRAM_MUI_MAIN_ADMIN_ID: <YOUR_TELEGRAM_USER_ID>
+         MUI_DB_HOST: 127.0.0.1
+         MUI_DB_USER: <DATABASE_USERNAME>
+         MUI_DB_PASSWORD: <DATABASE_PASSWORD>
+         MUI_DB_NAME: marzban
          TZ: UTC
    ```
 
    Replace the placeholder values with your actual credentials.
 
 3. **Explanation of Variables**:
-   - `TELEGRAM_MUM_TOKEN`: Telegram bot token obtained from BotFather.
-   - `TELEGRAM_MUM_MAIN_ADMIN_ID`: Your Telegram user ID (main admin).
-   - `MUM_DB_HOST`: Host address of the MySQL database (default is `127.0.0.1` for local setups).
-   - `MUM_DB_USER`: MySQL database username.
-   - `MUM_DB_PASSWORD`: MySQL database password.
-   - `MUM_DB_NAME`: Name of the MySQL database.
+
+   - `TELEGRAM_MUI_TOKEN`: Telegram bot token obtained from BotFather.
+   - `TELEGRAM_MUI_MAIN_ADMIN_ID`: Your Telegram user ID (main admin).
+   - `MUI_DB_HOST`: Host address of the MySQL database (default is `127.0.0.1` for local setups).
+   - `MUI_DB_USER`: MySQL database username.
+   - `MUI_DB_PASSWORD`: MySQL database password.
+   - `MUI_DB_NAME`: Name of the MySQL database.
    - `TZ`: Timezone for the bot (default is `UTC`, recommended to keep the default).
-  
+
 4. **Running the Bot**
+
    ```bash
    docker compose up -d
    ```
@@ -108,7 +114,7 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
    ```bash
    docker compose logs -f
    ```
-   
+
 ---
 
 ## Stopping and Restarting the Bot
@@ -134,7 +140,7 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 2. **Update the Bot**:
    ```bash
    docker compose down
-   docker compose pull mum-bot
+   docker compose pull mui-bot
    docker compose up -d
    ```
 
@@ -146,8 +152,9 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
 2. **Remove the Bot**:
    ```bash
    docker compose down -v
-   rm -rf /mum-bot
+   rm -rf /mui-bot
    ```
+
 ---
 
 ## Manual Configuration Updates
@@ -157,14 +164,14 @@ If you need to manually edit the bot's configuration file after deployment:
 1. Access the container:
 
    ```bash
-   docker exec -it mum-bot nano /app/data/config.json
+   docker exec -it mui-bot nano /app/data/config.json
    ```
 
 2. Or edit the local configuration file directly:
    ```bash
    nano ./data/config.json
    ```
-   
+
 ---
 
 ## Build Using Source code
@@ -182,8 +189,8 @@ If you need to manually edit the bot's configuration file after deployment:
 
    ```yaml
    services:
-     mum-bot:
-      container_name: mum-bot
+     mui-bot:
+      container_name: mui-bot
       build:
         context: .
         dockerfile: Dockerfile
@@ -192,8 +199,9 @@ If you need to manually edit the bot's configuration file after deployment:
     volumes:
       - ./data:/app/data
    ```
-   
+
 3. **Build and Running the Bot**
+
    ```bash
    docker compose up -d --build
    ```

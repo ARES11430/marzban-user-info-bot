@@ -9,11 +9,11 @@ fi
 # Define the file path
 env_file="/opt/marzban/.env"
 
-function mum-setup {
+function mui-setup {
     clear
     cd
-    if [ -f "mum-bot/docker-compose.yml" ] && [ -f "mum-bot/docker-compose.override.yml" ]; then
-        echo "mum-bot already installed."
+    if [ -f "mui-bot/docker-compose.yml" ] && [ -f "mui-bot/docker-compose.override.yml" ]; then
+        echo "mui-bot already installed."
         read -n 1 -s -r -p "Press any key to continue"
         return 0
     else
@@ -28,16 +28,16 @@ function mum-setup {
             apt-get install git -y
         fi           
         cd
-        mkdir mum-bot
-        cd mum-bot
+        mkdir mui-bot
+        cd mui-bot
         read -p "Enter your telegram bot token: " tbt
         read -p "Enter your telegram User ID: " tui
         #Creating a Docker Compose File
         cat <<EOF > docker-compose.yml
 services:
-  mum-bot:
-    container_name: mum-bot
-    image: ares11430/mum-bot:latest
+  mui-bot:
+    container_name: mui-bot
+    image: ares11430/mui-bot:latest
     network_mode: host
     restart: always
     volumes:
@@ -53,92 +53,92 @@ EOF
         #Creating an Override File for Environment Variables
         cat <<EOF > docker-compose.override.yml
 services:
-  mum-bot:
+  mui-bot:
     environment:
-      TELEGRAM_MUM_TOKEN: $tbt
-      TELEGRAM_MUM_MAIN_ADMIN_ID: $tui
-      MUM_DB_HOST: 127.0.0.1
-      MUM_DB_USER: $username
-      MUM_DB_PASSWORD: $password
-      MUM_DB_NAME: marzban
+      TELEGRAM_MUI_TOKEN: $tbt
+      TELEGRAM_MUI_MAIN_ADMIN_ID: $tui
+      MUI_DB_HOST: 127.0.0.1
+      MUI_DB_USER: $username
+      MUI_DB_PASSWORD: $password
+      MUI_DB_NAME: marzban
       TZ: UTC
 EOF
         docker compose up -d
     fi
 }
-function mum-logs {
+function mui-logs {
     clear
     cd
-    if [ ! -d "mum-bot" ]; then
+    if [ ! -d "mui-bot" ]; then
         echo "the bot is not installed yet"
         read -n 1 -s -r -p "Press any key to continue"
     else
-        cd mum-bot    
+        cd mui-bot    
         docker compose logs -f
     fi      
 }
-function mum-restart {
+function mui-restart {
     clear
       cd
-    if [ ! -d "mum-bot" ]; then
+    if [ ! -d "mui-bot" ]; then
         echo "the bot is not installed yet"
         read -n 1 -s -r -p "Press any key to continue"
     else
-      cd mum-bot    
+      cd mui-bot    
       docker compose stop
       docker compose up -d
     fi
 }
-function mum-stop {
+function mui-stop {
     clear
     cd
-    if [ ! -d "mum-bot" ]; then
+    if [ ! -d "mui-bot" ]; then
         echo "the bot is not installed yet"
         read -n 1 -s -r -p "Press any key to continue"
     else
-      cd mum-bot    
+      cd mui-bot    
       docker compose stop
     fi
 }
-function mum-updatep {
+function mui-updatep {
     clear
     cd
-    if [ ! -d "mum-bot" ]; then
+    if [ ! -d "mui-bot" ]; then
         echo "the bot is not installed yet"
         read -n 1 -s -r -p "Press any key to continue"
     else
-      cd mum-bot    
+      cd mui-bot    
       docker compose down
-      docker compose pull mum-bot
+      docker compose pull mui-bot
       docker compose up -d
     fi
 }
-function mum-config {
+function mui-config {
     clear
     cd
-    if [ ! -d "mum-bot" ]; then
+    if [ ! -d "mui-bot" ]; then
         echo "the bot is not installed yet"
         read -n 1 -s -r -p "Press any key to continue"
     else
-      cd mum-bot    
+      cd mui-bot    
       nano ./data/config.json
     fi
 }
-function mum-remove {
+function mui-remove {
     clear
     cd
-    if [ ! -d "mum-bot" ]; then
+    if [ ! -d "mui-bot" ]; then
         echo "the bot is not installed yet"
         read -n 1 -s -r -p "Press any key to continue"
     else
         docker compose down -v
-        rm -rf /mum-bot
+        rm -rf /mui-bot
     fi
 }
 
 while true; do
 clear
-    echo "MUM-Bot SetUp"
+    echo "MUI-Bot SetUp"
     echo "Menu:"
     echo "1  - Install the Bot"
     echo "2  - View Logs"
@@ -146,17 +146,17 @@ clear
     echo "4  - Stop The Bot"
     echo "5  - Update The Bot"
     echo "6  - View and Edit the Config"
-    echo "7  - Remove the mum-bot"
+    echo "7  - Remove the mui-bot"
     echo "8  - Exit"
     read -p "Enter your choice: " choice
     case $choice in
-        1) mum-setup;;
-        2) mum-logs;;
-        3) mum-restart;;
-        4) mum-stop;;
-        5) mum-updatep;;
-        6) mum-config;;
-        7) mum-remove;;
+        1) mui-setup;;
+        2) mui-logs;;
+        3) mui-restart;;
+        4) mui-stop;;
+        5) mui-updatep;;
+        6) mui-config;;
+        7) mui-remove;;
         8) echo "Exiting..."; exit;;
         *) echo "Invalid choice. Please enter a valid option.";;
     esac

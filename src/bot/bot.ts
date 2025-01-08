@@ -20,7 +20,7 @@ import {
 
 dotenv.config();
 
-const ADMIN_ID = process.env.TELEGRAM_MUM_MAIN_ADMIN_ID;
+const ADMIN_ID = process.env.TELEGRAM_MUI_MAIN_ADMIN_ID;
 
 interface AdminSession {
 	username?: string;
@@ -32,7 +32,7 @@ const sessions = new Map<number, AdminSession>();
 const thresholdSessions = new Set<number>();
 const userInfoSessions = new Set<number>();
 
-const bot = new Telegraf(process.env.TELEGRAM_MUM_TOKEN!);
+const bot = new Telegraf(process.env.TELEGRAM_MUI_TOKEN!);
 
 const isAdmin = async (ctx: Context) => {
 	const telegramAdmins = await loadTelegramAdmins();

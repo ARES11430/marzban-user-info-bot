@@ -41,8 +41,9 @@ bash <(curl -Ls https://raw.githubusercontent.com/ARES11430/marzban-user-info-bo
    apt-get update && apt-get install curl socat git -y
    curl -fsSL https://get.docker.com | sh
    ```
-   
+
 2. **Obtain MySQL Database Credentials**:
+
    - Database Host
    - Username
    - Password
@@ -222,13 +223,13 @@ If you need to manually edit the bot's configuration file after deployment:
          TZ: UTC
    ```
 
-3. **Build and Running the Bot**
+4. **Build and Running the Bot**
 
    ```bash
    docker compose up -d --build
    ```
 
-4. **View logs to ensure everything is working:**
+5. **View logs to ensure everything is working:**
    ```bash
    docker compose logs -f
    ```

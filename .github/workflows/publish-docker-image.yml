@@ -29,5 +29,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ares11430/mum-bot:${{ github.event.release.tag_name }}
-            ares11430/mum-bot:latest
+            ares11430/mui-bot:${{ github.event.release.tag_name }}
+            ares11430/mui-bot:latest

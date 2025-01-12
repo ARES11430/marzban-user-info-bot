@@ -1,6 +1,6 @@
-import moment from "moment-timezone";
-import { RowDataPacket } from "mysql2";
-import pool from "../database/db";
+import moment from 'moment-timezone';
+import { RowDataPacket } from 'mysql2';
+import pool from '../database/db';
 
 interface IUserTrafficLimit extends RowDataPacket {
   username: string;
@@ -70,7 +70,7 @@ export const getUserInfo = async (
   FROM users u
   JOIN admins a ON u.admin_id = a.id
   WHERE LOWER(u.username) = LOWER(?)
-  ${adminID ? "AND u.admin_id = ?" : ""} 
+  ${adminID ? 'AND u.admin_id = ?' : ''} 
   LIMIT 1`;
 
   const [rows] = await pool.query<IUserInfo[]>(
@@ -78,7 +78,7 @@ export const getUserInfo = async (
     adminID ? [username, adminID] : [username]
   );
 
-  return rows[0] || "No user found with this username 😥";
+  return rows[0] || 'No user found with this username 😥';
 };
 
 export const getClients = async (client: string, adminID?: number) => {
@@ -96,10 +96,10 @@ export const getClients = async (client: string, adminID?: number) => {
 
   // Return the formatted result
   return (
-    rows.map((user) => ({
+    rows.map(user => ({
       username: user.username,
       client: user.client,
-    })) || "No user is using this client"
+    })) || 'No user is using this client'
   );
 };
 
@@ -125,7 +125,7 @@ export const getLowTrafficUsers = async (traffic: number, adminID?: number) => {
   ]);
 
   // Return the formatted result
-  return rows.map((user) => ({
+  return rows.map(user => ({
     username: user.username,
     remainingTraffic: (user.remainingTraffic / (1024 * 1024 * 1024)).toFixed(2), // Convert bytes to GB and format
   }));
@@ -135,12 +135,12 @@ export const getExpiringUsers = async (
   adminID?: number
 ): Promise<IExpiringUsersResult> => {
   // Get the configured time zone from environment or default to UTC
-  const timeZone = process.env.TZ || "UTC";
+  const timeZone = process.env.TZ || 'UTC';
 
   // Calculate today and tomorrow and day after tomorrow in the specified time zone
-  const todayStart = moment.tz(timeZone).startOf("day");
-  const tomorrowStart = moment(todayStart).add(1, "day");
-  const dayAfterTomorrowStart = moment(todayStart).add(2, "day");
+  const todayStart = moment.tz(timeZone).startOf('day');
+  const tomorrowStart = moment(todayStart).add(1, 'day');
+  const dayAfterTomorrowStart = moment(todayStart).add(2, 'day');
 
   // Convert to ISO string for SQL query
   const todayStartISOString = todayStart.toISOString();
@@ -183,12 +183,12 @@ export const getExpiringUsers = async (
   };
 
   // Format and categorize the users for today
-  todayRows.forEach((user) => {
+  todayRows.forEach(user => {
     result.today.push({ username: user.username });
   });
 
   // Format and categorize the users for tomorrow
-  tomorrowRows.forEach((user) => {
+  tomorrowRows.forEach(user => {
     result.tomorrow.push({ username: user.username });
   });
 

@@ -74,8 +74,8 @@ const initializeCommands = async () => {
 
 const mainAdminButtons = [
      [Markup.button.callback('Users', 'user_management')],
-     [Markup.button.callback('User Clients Info', 'client_management')],
-     [Markup.button.callback('Admins', 'admin_management')],
+     [Markup.button.callback('Clients Info', 'client_management')],
+     [Markup.button.callback('Admin Management', 'admin_management')],
      [Markup.button.callback('Settings', 'settings')],
 ];
 
@@ -83,6 +83,7 @@ const regularAdminButtons = [
      [Markup.button.callback('Expiring Users', 'expiring_users')],
      [Markup.button.callback('Low Traffic Users', 'low_traffic_users')],
      [Markup.button.callback('User Info', 'user_info')],
+     [Markup.button.callback('Clients Info', 'clients_info')],
 ];
 
 bot.command('start', async (ctx) => {
@@ -161,18 +162,19 @@ bot.action('admin_management', async (ctx) => {
 
 // User Clients info Management Menu
 bot.action('client_management', async (ctx) => {
+     if (!isMainAdmin(ctx)) {
+          ctx.reply('You are not authorized to see this Menu.');
+          return;
+     }
+
      const mainAdminButtons = [
           [Markup.button.callback('User Clients Info (ALL)', 'all_clients_info')],
           [Markup.button.callback('My Users Client Info', 'clients_info')],
      ];
 
-     const regularAdminButtons = [[Markup.button.callback('My Users Client Info', 'clients_info')]];
-
-     const buttons = isMainAdmin(ctx) ? mainAdminButtons : regularAdminButtons;
-
      await ctx.reply(
           'Bellow is the List of commands\n related Clients Info: ',
-          Markup.inlineKeyboard(buttons)
+          Markup.inlineKeyboard(mainAdminButtons)
      );
 });
 
@@ -445,7 +447,7 @@ bot.action('low_traffic_users', async (ctx) => {
                if (users.length === 0) {
                     ctx.reply('no low user traffic found');
                } else {
-                    ctx.reply(message);
+                    await sendLongMessage(ctx, message);
                }
           } catch (error) {
                ctx.reply('Error fetching low traffic users.');
@@ -473,7 +475,7 @@ bot.action('all_low_traffic', async (ctx) => {
           if (users.length === 0) {
                ctx.reply('no low user traffic found');
           } else {
-               ctx.reply(message);
+               await sendLongMessage(ctx, message);
           }
      } catch (error) {
           ctx.reply('Error fetching all low traffic users.');
@@ -486,7 +488,7 @@ bot.action('expiring_users', async (ctx) => {
           try {
                const users = await getExpiringUsers(adminId);
                const message = formatExpiringUsersMessage(users);
-               ctx.reply(message);
+               await sendLongMessage(ctx, message);
           } catch (error) {
                ctx.reply('Error fetching expiring users.');
           }
@@ -506,7 +508,7 @@ bot.action('all_expiring', async (ctx) => {
      try {
           const users = await getExpiringUsers();
           const message = formatExpiringUsersMessage(users, true);
-          ctx.reply(message);
+          await sendLongMessage(ctx, message);
      } catch (error) {
           ctx.reply('Error fetching all expiring users.');
      }

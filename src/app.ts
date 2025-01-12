@@ -5,16 +5,16 @@ import { getTrafficThreshold } from './utils/utils';
 import './bot/bot';
 
 const main = async () => {
-	try {
-		const threshold = await getTrafficThreshold();
-		const lowTrafficUsers = await getLowTrafficUsers(threshold);
-		const expiringUsers = await getExpiringUsers();
+     try {
+          const threshold = await getTrafficThreshold();
+          const lowTrafficUsers = await getLowTrafficUsers(threshold);
+          const expiringUsers = await getExpiringUsers();
 
-		console.log('All Expiring users: ', expiringUsers);
-		console.log('All low traffic users:', lowTrafficUsers);
-	} catch (error) {
-		console.error('Error fetching users:', error);
-	}
+          console.log('All Expiring users: ', expiringUsers);
+          console.log('All low traffic users:', lowTrafficUsers);
+     } catch (error) {
+          console.error('Error fetching users:', error);
+     }
 };
 
 main();

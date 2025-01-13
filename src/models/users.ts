@@ -12,6 +12,11 @@ interface IExpiringUser extends RowDataPacket {
   expirationDate: string;
 }
 
+interface ISubscribedAt extends RowDataPacket {
+  username: string;
+  lastUpdate: Date;
+}
+
 interface IExpiringUsersResult {
   today: { username: string }[];
   tomorrow: { username: string }[];
@@ -101,6 +106,34 @@ export const getClients = async (client: string, adminID?: number) => {
       client: user.client,
     })) || 'No user is using this client'
   );
+};
+
+export const getOutdatedSubscriptionUsers = async (
+  days: number,
+  adminID?: number
+) => {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+
+  const query = `
+    SELECT 
+      username,
+      sub_updated_at AS lastUpdate
+    FROM 
+      users 
+    WHERE 
+      sub_updated_at < ?
+    ${adminID ? `AND admin_id = ?` : ``}
+    AND 
+      status = 'active'
+  `;
+
+  const [rows] = await pool.query<ISubscribedAt[]>(
+    query,
+    [cutoffDate, adminID].filter(Boolean)
+  );
+
+  return rows;
 };
 
 export const getLowTrafficUsers = async (traffic: number, adminID?: number) => {

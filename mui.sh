@@ -61,7 +61,6 @@ services:
       MUI_DB_USER: $username
       MUI_DB_PASSWORD: $password
       MUI_DB_NAME: marzban
-      TZ: UTC
 EOF
         docker compose up -d
     fi

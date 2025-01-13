@@ -46,6 +46,7 @@ export interface IUserInfo extends RowDataPacket {
 interface IClient extends RowDataPacket {
   username: string;
   client: string;
+  lastUpdate: Date;
 }
 
 export const getAdminID = async (username: string): Promise<number | null> => {
@@ -90,7 +91,8 @@ export const getUserInfo = async (
 export const getClients = async (client: string, adminID?: number) => {
   const query = `SELECT
    username,
-   sub_last_user_agent AS client
+   sub_last_user_agent AS client,
+   sub_updated_at AS lastUpdate
    FROM users 
    WHERE sub_last_user_agent LIKE CONCAT('%', ?, '%')
    ${adminID ? `AND admin_id = ?` : ``}
@@ -105,6 +107,7 @@ export const getClients = async (client: string, adminID?: number) => {
     rows.map(user => ({
       username: user.username,
       client: user.client,
+      lastUpdate: user.lastUpdate,
     })) || 'No user is using this client'
   );
 };

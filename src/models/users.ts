@@ -1,6 +1,7 @@
 import moment from 'moment-timezone';
 import { RowDataPacket } from 'mysql2';
 import pool from '../database/db';
+import { getTimeZone } from '../utils/utils';
 
 interface IUserTrafficLimit extends RowDataPacket {
   username: string;
@@ -167,8 +168,7 @@ export const getLowTrafficUsers = async (traffic: number, adminID?: number) => {
 export const getExpiringUsers = async (
   adminID?: number
 ): Promise<IExpiringUsersResult> => {
-  // Get the configured time zone from environment or default to UTC
-  const timeZone = process.env.TZ || 'UTC';
+  const timeZone = await getTimeZone();
 
   // Calculate today and tomorrow and day after tomorrow in the specified time zone
   const todayStart = moment.tz(timeZone).startOf('day');

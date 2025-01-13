@@ -13,6 +13,7 @@ import {
   addDatabaseAdmin,
   addTelegramAdminID,
   getOutdatedSubThreshold,
+  getTimeZone,
   getTrafficThreshold,
   loadDatabaseAdmins,
   loadTelegramAdmins,
@@ -20,6 +21,7 @@ import {
   removeTelegramAdminID,
   sendLongMessage,
   setOutdatedSubThreshold,
+  setTimeZone,
   setTrafficThreshold,
 } from '../utils/utils';
 
@@ -33,12 +35,29 @@ interface AdminSession {
   step: 'username' | 'telegramId' | 'complete';
 }
 
-const sessions = new Map<number, AdminSession>();
+const adminSession = new Map<number, AdminSession>();
 const trafficThresholdSession = new Set<number>();
 const subThresholdSession = new Set<number>();
-const userInfoSessions = new Set<number>();
+const userInfoSession = new Set<number>();
+const timezoneSession = new Set<number>();
 
 const DeviceClients = ['V2ray', 'V2box', 'Streisand', 'Nekoray'];
+
+const TimeZones = [
+  'UTC',
+  'CET', // Central Europe Time
+  'Asia/Tehran', // Iran
+
+  // China (China uses a single timezone for the entire country)
+  'Asia/Shanghai',
+
+  // Russia (Major timezones)
+  'Europe/Moscow', // Moscow
+  'Europe/Kaliningrad', // Western Russia
+  'Asia/Yekaterinburg', // Central Russia
+  'Asia/Novosibirsk', // Siberia
+  'Asia/Vladivostok', // Far East Russia
+];
 
 const bot = new Telegraf(process.env.TELEGRAM_MUI_TOKEN!);
 
@@ -118,9 +137,11 @@ bot.action('settings', async ctx => {
 
   const threshold = await getTrafficThreshold();
   const subThreshold = await getOutdatedSubThreshold();
+  const timeZone = await getTimeZone();
   ctx.reply(
-    `Current Traffic Threshold: ${threshold} GB\n\nTo change the threshold, use the command:\n/set_traffic_threshold\n\n
-Current Outdated Threshold: ${subThreshold} Days\n\nTo change it, use the command:\n/set_sub_threshold
+    `Current Traffic Threshold: ${threshold} GB\nTo change the threshold, use the command:\n/set_traffic_threshold\n\n
+Current Outdated Threshold: ${subThreshold} Days\nTo change it, use the command:\n/set_sub_threshold\n\n
+Current Time Zone: ${timeZone}\nTo change it, use the command:\n/set_timezone
     `
   );
 });
@@ -147,6 +168,28 @@ bot.command('set_sub_threshold', async ctx => {
   const userId = ctx.from.id;
   subThresholdSession.add(userId);
   ctx.reply('Please enter the new outdated subscription threshold (in Days):');
+});
+
+// Time Zone Setting
+bot.command('set_timezone', async ctx => {
+  if (!isMainAdmin(ctx)) {
+    ctx.reply('You are not authorized to change settings.');
+    return;
+  }
+
+  const timezones = TimeZones;
+
+  const buttons = timezones.map(timezone =>
+    Markup.button.callback(timezone, `choose_timezone_${timezone}`)
+  );
+
+  const inlineKeyboard = Markup.inlineKeyboard(
+    buttons.map(btn => [btn]) // Arrange buttons vertically
+  );
+
+  const userId = ctx.from.id;
+  timezoneSession.add(userId);
+  await ctx.reply('Select a timezone to set:', inlineKeyboard);
 });
 
 // Users Management Menu
@@ -232,7 +275,7 @@ bot.action('add_admin', async ctx => {
   const userId = ctx.from?.id;
   if (!userId) return;
 
-  sessions.set(userId, { step: 'username' });
+  adminSession.set(userId, { step: 'username' });
   ctx.reply(
     `Please enter the username of the admin in Marzban Pannel:\n
 (invalid username prevents the bot from working correctly)`
@@ -275,7 +318,7 @@ bot.action('list_admins', async ctx => {
 
 bot.action('user_info', ctx => {
   const userId = ctx.from.id;
-  userInfoSessions.add(userId);
+  userInfoSession.add(userId);
   ctx.reply('Please Enter the username of the User: ');
 });
 
@@ -328,18 +371,18 @@ bot.on('text', async ctx => {
     return;
   }
 
-  if (userInfoSessions.has(userId)) {
+  if (userInfoSession.has(userId)) {
     const username = ctx.message.text;
     if (isMainAdmin(ctx)) {
       const userInfo = await getUserInfo(username);
-      ctx.reply(formatUserInfo(userInfo), {
+      ctx.reply(await formatUserInfo(userInfo), {
         parse_mode: 'MarkdownV2',
       });
     } else if (await isAdmin(ctx)) {
       const adminId = await getAdminDatabaseId(ctx.from?.id ?? 0);
       if (adminId) {
         const userInfo = await getUserInfo(username, adminId);
-        ctx.reply(formatUserInfo(userInfo), {
+        ctx.reply(await formatUserInfo(userInfo), {
           parse_mode: 'MarkdownV2',
         });
       } else {
@@ -349,12 +392,12 @@ bot.on('text', async ctx => {
       }
     }
 
-    userInfoSessions.delete(userId);
+    userInfoSession.delete(userId);
     return;
   }
 
   // Handle admin addition sessions
-  const session = sessions.get(userId);
+  const session = adminSession.get(userId);
   if (!session) return;
 
   if (session.step === 'username') {
@@ -366,7 +409,7 @@ bot.on('text', async ctx => {
       return;
     }
 
-    sessions.set(userId, {
+    adminSession.set(userId, {
       username,
       adminId,
       step: 'telegramId',
@@ -384,7 +427,7 @@ bot.on('text', async ctx => {
     const { username, adminId } = session;
 
     if (!username || !adminId) {
-      sessions.delete(userId);
+      adminSession.delete(userId);
       ctx.reply('Error in admin addition process. Please start over.');
       return;
     }
@@ -398,7 +441,7 @@ bot.on('text', async ctx => {
       await addTelegramAdminID(telegramId);
 
       ctx.reply(`Admin ${username} successfully added!`);
-      sessions.delete(userId);
+      adminSession.delete(userId);
     } catch (error) {
       ctx.reply('Error adding admin. Please try again.');
     }
@@ -446,6 +489,31 @@ bot.action(['all_clients_info', 'clients_info'], async ctx => {
     'Select a client to view users associated with it:',
     inlineKeyboard
   );
+});
+
+const timezonePattern = new RegExp(`^choose_timezone_(.+)$`);
+
+bot.action(timezonePattern, async ctx => {
+  if (!isMainAdmin(ctx)) {
+    ctx.reply('Unauthorized access.');
+    return;
+  }
+
+  const userId = ctx.from.id;
+  if (timezoneSession.has(userId)) {
+    try {
+      const timezone = ctx.match?.[1];
+      await setTimeZone(timezone);
+      await ctx.reply(`Timezone has been set to ${timezone}`);
+      userInfoSession.delete(userId);
+      return;
+    } catch (error) {
+      console.error('Error setting timezone:', error);
+      ctx.reply('Failed to set timezone. Please try again.');
+      userInfoSession.delete(userId);
+      return;
+    }
+  }
 });
 
 // Create the regex pattern dynamically from DeviceClients array
@@ -520,15 +588,16 @@ bot.action('outdated_subs', async ctx => {
       const threshold = await getOutdatedSubThreshold();
       const users = await getOutdatedSubscriptionUsers(threshold, adminId);
       let message = `Users haven't updated their subscription for more than ${threshold} days:\n\n`;
+      const timeZone = await getTimeZone();
 
       users.forEach(user => {
         const date = new Date(user.lastUpdate);
         const formattedDate = date.toLocaleString('en-GB', {
           dateStyle: 'medium',
           timeStyle: 'short',
-          timeZone: 'UTC',
+          timeZone: timeZone,
         });
-        message += `${user.username} - ${formattedDate} - UTC\n\n`;
+        message += `${user.username} - ${formattedDate}\n\n`;
       });
 
       if (users.length === 0) {
@@ -556,15 +625,16 @@ bot.action('all_outdated_subs', async ctx => {
     const threshold = await getOutdatedSubThreshold();
     const users = await getOutdatedSubscriptionUsers(threshold);
     let message = `All the Users haven't updated their subscription for more than ${threshold} days:\n\n`;
+    const timeZone = await getTimeZone();
 
     users.forEach(user => {
       const date = new Date(user.lastUpdate);
       const formattedDate = date.toLocaleString('en-GB', {
         dateStyle: 'medium',
         timeStyle: 'short',
-        timeZone: 'UTC',
+        timeZone: timeZone,
       });
-      message += `${user.username} - ${formattedDate} - UTC\n\n`;
+      message += `${user.username} - ${formattedDate}\n\n`;
     });
 
     if (users.length === 0) {
@@ -671,12 +741,16 @@ function formatExpiringUsersMessage(
   return `${prefix}Users Expiring Today:\n${todayUsers}\n\n${prefix}Users Expiring Tomorrow:\n${tomorrowUsers}`;
 }
 
-function formatUserInfo(userInfo: IUserInfo) {
+async function formatUserInfo(userInfo: IUserInfo) {
+  const timeZone = await getTimeZone();
+
   const formatDate = (date: Date): string => {
-    return new Intl.DateTimeFormat('en-GB', {
+    const newDate = new Date(date);
+    return newDate.toLocaleString('en-GB', {
       dateStyle: 'medium',
       timeStyle: 'short',
-    }).format(new Date(date));
+      timeZone: timeZone,
+    });
   };
 
   if (typeof userInfo === 'string') {

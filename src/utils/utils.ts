@@ -37,6 +37,7 @@ const loadConfig = async () => {
       dataBaseAdmins: [],
       trafficThreshold: 5,
       outdatedSubThreshold: 3,
+      timeZone: 'Asia/Tehran',
     };
     // Save the default config immediately
     await saveConfig(defaultConfig);
@@ -122,6 +123,17 @@ export const getOutdatedSubThreshold = async (): Promise<number> => {
 export const setOutdatedSubThreshold = async (value: number): Promise<void> => {
   const config = await loadConfig();
   config.outdatedSubThreshold = value;
+  await saveConfig(config);
+};
+
+export const getTimeZone = async (): Promise<string> => {
+  const config = await loadConfig();
+  return config.timeZone || 'Asia/Tehran';
+};
+
+export const setTimeZone = async (value: string): Promise<void> => {
+  const config = await loadConfig();
+  config.timeZone = value;
   await saveConfig(config);
 };
 

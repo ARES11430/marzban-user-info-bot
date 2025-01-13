@@ -1,4 +1,8 @@
-import { getExpiringUsers, getLowTrafficUsers } from './models/users';
+import {
+  getExpiringUsers,
+  getLowTrafficUsers,
+  getOutdatedSubscriptionUsers,
+} from './models/users';
 import { getTrafficThreshold } from './utils/utils';
 
 // load bot.ts

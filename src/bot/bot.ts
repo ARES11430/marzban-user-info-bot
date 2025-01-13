@@ -5,18 +5,21 @@ import {
   getClients,
   getExpiringUsers,
   getLowTrafficUsers,
+  getOutdatedSubscriptionUsers,
   getUserInfo,
   IUserInfo,
 } from '../models/users';
 import {
   addDatabaseAdmin,
   addTelegramAdminID,
+  getOutdatedSubThreshold,
   getTrafficThreshold,
   loadDatabaseAdmins,
   loadTelegramAdmins,
   removeDatabaseAdmin,
   removeTelegramAdminID,
   sendLongMessage,
+  setOutdatedSubThreshold,
   setTrafficThreshold,
 } from '../utils/utils';
 
@@ -31,7 +34,8 @@ interface AdminSession {
 }
 
 const sessions = new Map<number, AdminSession>();
-const thresholdSessions = new Set<number>();
+const trafficThresholdSession = new Set<number>();
+const subThresholdSession = new Set<number>();
 const userInfoSessions = new Set<number>();
 
 const DeviceClients = ['V2ray', 'V2box', 'Streisand', 'Nekoray'];
@@ -73,8 +77,9 @@ const initializeCommands = async () => {
 };
 
 const mainAdminButtons = [
-  [Markup.button.callback('Users', 'user_management')],
+  [Markup.button.callback('Users Menu', 'user_management')],
   [Markup.button.callback('Clients Info', 'client_management')],
+  [Markup.button.callback('Subscription Menu', 'sub_management')],
   [Markup.button.callback('Admin Management', 'admin_management')],
   [Markup.button.callback('Settings', 'settings')],
 ];
@@ -84,6 +89,7 @@ const regularAdminButtons = [
   [Markup.button.callback('Low Traffic Users', 'low_traffic_users')],
   [Markup.button.callback('User Info', 'user_info')],
   [Markup.button.callback('Clients Info', 'clients_info')],
+  [Markup.button.callback('Outdated Subscriptions', 'outdated_subs')],
 ];
 
 bot.command('start', async ctx => {
@@ -111,27 +117,42 @@ bot.action('settings', async ctx => {
   }
 
   const threshold = await getTrafficThreshold();
+  const subThreshold = await getOutdatedSubThreshold();
   ctx.reply(
-    `Current Traffic Threshold: ${threshold} GB\n\nTo change the threshold, use the command:\n/set_threshold`
+    `Current Traffic Threshold: ${threshold} GB\n\nTo change the threshold, use the command:\n/set_traffic_threshold\n\n
+Current Outdated Threshold: ${subThreshold} Days\n\nTo change it, use the command:\n/set_sub_threshold
+    `
   );
 });
 
-// Two-Step Threshold Setting
-bot.command('set_threshold', async ctx => {
+// Two-Step traffic Threshold Setting
+bot.command('set_traffic_threshold', async ctx => {
   if (!isMainAdmin(ctx)) {
     ctx.reply('You are not authorized to change settings.');
     return;
   }
 
   const userId = ctx.from.id;
-  thresholdSessions.add(userId);
+  trafficThresholdSession.add(userId);
   ctx.reply('Please enter the new traffic threshold (in GB):');
+});
+
+// Two-Step subscription Threshold Setting
+bot.command('set_sub_threshold', async ctx => {
+  if (!isMainAdmin(ctx)) {
+    ctx.reply('You are not authorized to change settings.');
+    return;
+  }
+
+  const userId = ctx.from.id;
+  subThresholdSession.add(userId);
+  ctx.reply('Please enter the new outdated subscription threshold (in Days):');
 });
 
 // Users Management Menu
 bot.action('user_management', async ctx => {
   if (!isMainAdmin(ctx)) {
-    ctx.reply('You are not authorized to manage admins.');
+    ctx.reply('You are not authorized to see this menu.');
     return;
   }
 
@@ -180,6 +201,24 @@ bot.action('client_management', async ctx => {
 
   await ctx.reply(
     'Bellow is the List of commands\n related Clients Info: ',
+    Markup.inlineKeyboard(mainAdminButtons)
+  );
+});
+
+// Subscription Management Menu
+bot.action('sub_management', async ctx => {
+  if (!isMainAdmin(ctx)) {
+    ctx.reply('You are not authorized to see this Menu.');
+    return;
+  }
+
+  const mainAdminButtons = [
+    [Markup.button.callback('Outdated Subs (ALL)', 'all_outdated_subs')],
+    [Markup.button.callback('My Outdated Subs', 'outdated_subs')],
+  ];
+
+  await ctx.reply(
+    'Bellow is the List of commands\n related to Subscription Info: ',
     Markup.inlineKeyboard(mainAdminButtons)
   );
 });
@@ -243,8 +282,8 @@ bot.action('user_info', ctx => {
 bot.on('text', async ctx => {
   const userId = ctx.from.id;
 
-  // Handle threshold-setting session
-  if (thresholdSessions.has(userId)) {
+  // Handle traffic threshold-setting session
+  if (trafficThresholdSession.has(userId)) {
     const value = parseFloat(ctx.message.text);
 
     if (isNaN(value) || value <= 0) {
@@ -261,7 +300,31 @@ bot.on('text', async ctx => {
       ctx.reply('Error updating threshold. Please try again.');
     }
 
-    thresholdSessions.delete(userId); // End session
+    trafficThresholdSession.delete(userId); // End session
+    return;
+  }
+
+  // Handle outdated subscription threshold-setting session
+  if (subThresholdSession.has(userId)) {
+    const value = parseFloat(ctx.message.text);
+
+    if (isNaN(value) || value <= 0) {
+      ctx.reply(
+        'Invalid input. Please provide a valid positive number (in Days):'
+      );
+      return;
+    }
+
+    try {
+      await setOutdatedSubThreshold(value);
+      ctx.reply(
+        `Outdated subbscription threshold successfully updated to ${value} Days.`
+      );
+    } catch (error) {
+      ctx.reply('Error updating threshold. Please try again.');
+    }
+
+    subThresholdSession.delete(userId); // End session
     return;
   }
 
@@ -446,6 +509,71 @@ bot.action(clientPattern, async ctx => {
   } catch (error) {
     console.error(error);
     await ctx.reply(`Error fetching users for client: ${selectedClient}`);
+  }
+});
+
+// Handle outdated subs users
+bot.action('outdated_subs', async ctx => {
+  const adminId = await getAdminDatabaseId(ctx.from?.id ?? 0);
+  if (adminId) {
+    try {
+      const threshold = await getOutdatedSubThreshold();
+      const users = await getOutdatedSubscriptionUsers(threshold, adminId);
+      let message = `Users haven't updated their subscription for more than ${threshold} days:\n\n`;
+
+      users.forEach(user => {
+        const date = new Date(user.lastUpdate);
+        const formattedDate = date.toLocaleString('en-GB', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+          timeZone: 'UTC',
+        });
+        message += `${user.username} - ${formattedDate} - UTC\n\n`;
+      });
+
+      if (users.length === 0) {
+        ctx.reply('All users updated their Subscription...');
+      } else {
+        await sendLongMessage(ctx, message);
+      }
+    } catch (error) {
+      ctx.reply('Error fetching outdated subscription users.');
+    }
+  } else {
+    ctx.reply(
+      'No admin found in config file with your Telegram ID, please double check config data in server!'
+    );
+  }
+});
+
+bot.action('all_outdated_subs', async ctx => {
+  if (!isMainAdmin(ctx)) {
+    ctx.reply('Unauthorized access.');
+    return;
+  }
+
+  try {
+    const threshold = await getOutdatedSubThreshold();
+    const users = await getOutdatedSubscriptionUsers(threshold);
+    let message = `All the Users haven't updated their subscription for more than ${threshold} days:\n\n`;
+
+    users.forEach(user => {
+      const date = new Date(user.lastUpdate);
+      const formattedDate = date.toLocaleString('en-GB', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: 'UTC',
+      });
+      message += `${user.username} - ${formattedDate} - UTC\n\n`;
+    });
+
+    if (users.length === 0) {
+      ctx.reply('All users updated their Subscription...');
+    } else {
+      await sendLongMessage(ctx, message);
+    }
+  } catch (error) {
+    ctx.reply('Error fetching all outdated subscription users.');
   }
 });
 

@@ -36,6 +36,7 @@ const loadConfig = async () => {
       telegramAdmins: [],
       dataBaseAdmins: [],
       trafficThreshold: 5,
+      outdatedSubThreshold: 3,
     };
     // Save the default config immediately
     await saveConfig(defaultConfig);
@@ -110,6 +111,17 @@ export const getTrafficThreshold = async (): Promise<number> => {
 export const setTrafficThreshold = async (value: number): Promise<void> => {
   const config = await loadConfig();
   config.trafficThreshold = value;
+  await saveConfig(config);
+};
+
+export const getOutdatedSubThreshold = async (): Promise<number> => {
+  const config = await loadConfig();
+  return config.outdatedSubThreshold || 3;
+};
+
+export const setOutdatedSubThreshold = async (value: number): Promise<void> => {
+  const config = await loadConfig();
+  config.outdatedSubThreshold = value;
   await saveConfig(config);
 };
 

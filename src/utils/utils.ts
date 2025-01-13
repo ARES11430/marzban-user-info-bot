@@ -137,6 +137,15 @@ export const setTimeZone = async (value: string): Promise<void> => {
   await saveConfig(config);
 };
 
+export const formatDate = (date: Date, timeZone: string): string => {
+  const newDate = new Date(date);
+  return newDate.toLocaleString('en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: timeZone,
+  });
+};
+
 export const sendLongMessage = async (
   ctx: Context,
   text: string,

@@ -12,6 +12,7 @@ import {
 import {
   addDatabaseAdmin,
   addTelegramAdminID,
+  formatDate,
   getOutdatedSubThreshold,
   getTimeZone,
   getTrafficThreshold,
@@ -81,6 +82,7 @@ bot.use(async (ctx, next) => {
   if (isMainAdmin(ctx) || (await isAdmin(ctx))) {
     return next();
   } else {
+    console.error('You are not authorized to use this bot.');
     ctx.reply('You are not authorized to use this bot.');
     return;
   }
@@ -112,6 +114,7 @@ const regularAdminButtons = [
 ];
 
 bot.command('start', async ctx => {
+  console.log('bot started!');
   const buttons = isMainAdmin(ctx) ? mainAdminButtons : regularAdminButtons;
 
   await ctx.reply(
@@ -121,6 +124,7 @@ bot.command('start', async ctx => {
 });
 
 bot.command('commands', async ctx => {
+  console.log('List of commands called!');
   const buttons = isMainAdmin(ctx) ? mainAdminButtons : regularAdminButtons;
 
   await ctx.reply(
@@ -130,8 +134,10 @@ bot.command('commands', async ctx => {
 });
 
 bot.action('settings', async ctx => {
+  console.log('Settings called');
   if (!isMainAdmin(ctx)) {
-    ctx.reply('You are not authorized to access settings.');
+    console.error('You are not authorized to change settings.');
+    ctx.reply('You are not authorized to change settings.');
     return;
   }
 
@@ -148,7 +154,9 @@ Current Time Zone: ${timeZone}\nTo change it, use the command:\n/set_timezone
 
 // Two-Step traffic Threshold Setting
 bot.command('set_traffic_threshold', async ctx => {
+  console.log('set_traffic_threshold is called');
   if (!isMainAdmin(ctx)) {
+    console.error('You are not authorized to change settings.');
     ctx.reply('You are not authorized to change settings.');
     return;
   }
@@ -160,6 +168,7 @@ bot.command('set_traffic_threshold', async ctx => {
 
 // Two-Step subscription Threshold Setting
 bot.command('set_sub_threshold', async ctx => {
+  console.log('set_sub_threshold is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('You are not authorized to change settings.');
     return;
@@ -172,6 +181,7 @@ bot.command('set_sub_threshold', async ctx => {
 
 // Time Zone Setting
 bot.command('set_timezone', async ctx => {
+  console.log('set_timezone is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('You are not authorized to change settings.');
     return;
@@ -194,6 +204,7 @@ bot.command('set_timezone', async ctx => {
 
 // Users Management Menu
 bot.action('user_management', async ctx => {
+  console.log('user_management is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('You are not authorized to see this menu.');
     return;
@@ -202,7 +213,7 @@ bot.action('user_management', async ctx => {
   ctx.reply(
     'User Management Menu:',
     Markup.inlineKeyboard([
-      [Markup.button.callback('Expiring Users (All)', 'all_expiring')],
+      [Markup.button.callback('Expiring Users (All)', 'all_expiring_users')],
       [Markup.button.callback('Low Traffic Users (All)', 'all_low_traffic')],
       [Markup.button.callback('My Expiring Users', 'expiring_users')],
       [Markup.button.callback('My Low Traffic Users', 'low_traffic_users')],
@@ -213,6 +224,7 @@ bot.action('user_management', async ctx => {
 
 // Admin Management Menu
 bot.action('admin_management', async ctx => {
+  console.log('admin_management is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('You are not authorized to manage admins.');
     return;
@@ -232,6 +244,7 @@ bot.action('admin_management', async ctx => {
 
 // User Clients info Management Menu
 bot.action('client_management', async ctx => {
+  console.log('client_management is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('You are not authorized to see this Menu.');
     return;
@@ -250,6 +263,7 @@ bot.action('client_management', async ctx => {
 
 // Subscription Management Menu
 bot.action('sub_management', async ctx => {
+  console.log('sub_management is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('You are not authorized to see this Menu.');
     return;
@@ -267,6 +281,7 @@ bot.action('sub_management', async ctx => {
 });
 
 bot.action('add_admin', async ctx => {
+  console.log('add_admin is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('Unauthorized access.');
     return;
@@ -283,6 +298,7 @@ bot.action('add_admin', async ctx => {
 });
 
 bot.action('remove_admin', async ctx => {
+  console.log('remove_admin is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('Unauthorized access.');
     return;
@@ -300,6 +316,7 @@ bot.action('remove_admin', async ctx => {
 });
 
 bot.action('list_admins', async ctx => {
+  console.log('list_admins is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('Unauthorized access.');
     return;
@@ -317,12 +334,14 @@ bot.action('list_admins', async ctx => {
 });
 
 bot.action('user_info', ctx => {
+  console.log('user_info is called');
   const userId = ctx.from.id;
   userInfoSession.add(userId);
   ctx.reply('Please Enter the username of the User: ');
 });
 
 bot.on('text', async ctx => {
+  console.log('text received', ctx.message.text);
   const userId = ctx.from.id;
 
   // Handle traffic threshold-setting session
@@ -450,6 +469,7 @@ bot.on('text', async ctx => {
 
 // Handle admin removal
 bot.action(/^remove_admin:(\d+)$/, async ctx => {
+  console.log('Admin removed is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('Unauthorized access.');
     return;
@@ -474,6 +494,7 @@ bot.action(/^remove_admin:(\d+)$/, async ctx => {
 });
 
 bot.action(['all_clients_info', 'clients_info'], async ctx => {
+  console.log('clients_info is called');
   const action = ctx.match[0]; // Get the current action (all_clients_info or clients_info)
   const clients = DeviceClients;
 
@@ -494,6 +515,7 @@ bot.action(['all_clients_info', 'clients_info'], async ctx => {
 const timezonePattern = new RegExp(`^choose_timezone_(.+)$`);
 
 bot.action(timezonePattern, async ctx => {
+  console.log('choose_timezone is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('Unauthorized access.');
     return;
@@ -522,6 +544,7 @@ const clientPattern = new RegExp(
 );
 
 bot.action(clientPattern, async ctx => {
+  console.log('choose_client is called');
   const selectedClient = ctx.match?.[1];
 
   if (!DeviceClients.includes(selectedClient)) {
@@ -532,6 +555,7 @@ bot.action(clientPattern, async ctx => {
   const action = ctx.match?.[2];
 
   try {
+    const timeZone = await getTimeZone();
     if (action === 'clients_info') {
       const adminId = await getAdminDatabaseId(ctx.from?.id ?? 0);
       if (!adminId) {
@@ -550,7 +574,9 @@ bot.action(clientPattern, async ctx => {
 
       let message = `Users using ${selectedClient}:\n\n`;
       users.forEach(user => {
-        message += `Username: ${user.username}\nClient: ${user.client}\n\n`;
+        message += `Username: ${user.username}\nClient: ${
+          user.client
+        }\nLastUpdate: ${formatDate(user.lastUpdate, timeZone)}\n\n`;
       });
 
       await sendLongMessage(ctx, message);
@@ -569,7 +595,9 @@ bot.action(clientPattern, async ctx => {
 
       let message = `All users using ${selectedClient}:\n\n`;
       users.forEach(user => {
-        message += `Username: ${user.username}\nClient: ${user.client}\n\n`;
+        message += `Username: ${user.username}\nClient: ${
+          user.client
+        }\nLastUpdate: ${formatDate(user.lastUpdate, timeZone)}\n\n`;
       });
 
       await sendLongMessage(ctx, message);
@@ -582,6 +610,7 @@ bot.action(clientPattern, async ctx => {
 
 // Handle outdated subs users
 bot.action('outdated_subs', async ctx => {
+  console.log('outdated_subs is called');
   const adminId = await getAdminDatabaseId(ctx.from?.id ?? 0);
   if (adminId) {
     try {
@@ -592,12 +621,7 @@ bot.action('outdated_subs', async ctx => {
 
       users.forEach(user => {
         const date = new Date(user.lastUpdate);
-        const formattedDate = date.toLocaleString('en-GB', {
-          dateStyle: 'medium',
-          timeStyle: 'short',
-          timeZone: timeZone,
-        });
-        message += `${user.username} - ${formattedDate}\n\n`;
+        message += `${user.username} - ${formatDate(date, timeZone)}\n\n`;
       });
 
       if (users.length === 0) {
@@ -616,6 +640,7 @@ bot.action('outdated_subs', async ctx => {
 });
 
 bot.action('all_outdated_subs', async ctx => {
+  console.log('all_outdated_subs');
   if (!isMainAdmin(ctx)) {
     ctx.reply('Unauthorized access.');
     return;
@@ -629,12 +654,7 @@ bot.action('all_outdated_subs', async ctx => {
 
     users.forEach(user => {
       const date = new Date(user.lastUpdate);
-      const formattedDate = date.toLocaleString('en-GB', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-        timeZone: timeZone,
-      });
-      message += `${user.username} - ${formattedDate}\n\n`;
+      message += `${user.username} - ${formatDate(date, timeZone)}\n\n`;
     });
 
     if (users.length === 0) {
@@ -649,6 +669,7 @@ bot.action('all_outdated_subs', async ctx => {
 
 // Handle user data queries
 bot.action('low_traffic_users', async ctx => {
+  console.log('low_traffic_users');
   const adminId = await getAdminDatabaseId(ctx.from?.id ?? 0);
   if (adminId) {
     try {
@@ -674,6 +695,7 @@ bot.action('low_traffic_users', async ctx => {
 });
 
 bot.action('all_low_traffic', async ctx => {
+  console.log('all_low_traffic is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('Unauthorized access.');
     return;
@@ -697,6 +719,7 @@ bot.action('all_low_traffic', async ctx => {
 });
 
 bot.action('expiring_users', async ctx => {
+  console.log('expiring_users is called');
   const adminId = await getAdminDatabaseId(ctx.from?.id ?? 0);
   if (adminId) {
     try {
@@ -713,7 +736,8 @@ bot.action('expiring_users', async ctx => {
   }
 });
 
-bot.action('all_expiring', async ctx => {
+bot.action('all_expiring_users', async ctx => {
+  console.log('all_expiring_users is called');
   if (!isMainAdmin(ctx)) {
     ctx.reply('Unauthorized access.');
     return;
@@ -743,15 +767,6 @@ function formatExpiringUsersMessage(
 
 async function formatUserInfo(userInfo: IUserInfo) {
   const timeZone = await getTimeZone();
-
-  const formatDate = (date: Date): string => {
-    const newDate = new Date(date);
-    return newDate.toLocaleString('en-GB', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-      timeZone: timeZone,
-    });
-  };
 
   if (typeof userInfo === 'string') {
     return userInfo;
@@ -784,15 +799,14 @@ async function formatUserInfo(userInfo: IUserInfo) {
     /[_*[\]()~`>#+-=|{}.!]/g,
     '\\$&'
   );
-  const escapedOnline = (formatDate(userInfo.onlineAt) || 'never').replace(
-    /[_*[\]()~`>#+-=|{}.!]/g,
-    '\\$&'
-  );
+  const escapedOnline = (
+    formatDate(userInfo.onlineAt, timeZone) || 'never'
+  ).replace(/[_*[\]()~`>#+-=|{}.!]/g, '\\$&');
   const escapedSubUpdate = (
-    formatDate(userInfo.subUpdatedAt) || 'never'
+    formatDate(userInfo.subUpdatedAt, timeZone) || 'never'
   ).replace(/[_*[\]()~`>#+-=|{}.!]/g, '\\$&');
   const escapedExpiration = userInfo.expirationDate
-    ? formatDate(userInfo.expirationDate)
+    ? formatDate(userInfo.expirationDate, timeZone)
     : 'Never';
 
   // Escape expiration date to prevent MarkdownV2 errors

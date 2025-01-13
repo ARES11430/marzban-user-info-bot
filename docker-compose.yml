@@ -1,7 +1,7 @@
 services:
   mui-bot:
     container_name: mui-bot
-    image: mui-bot:latest
+    image: ares11430/mui-bot:latest
     build: .
     network_mode: host
     restart: always

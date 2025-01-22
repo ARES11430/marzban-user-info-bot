@@ -17,7 +17,9 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
   - Main Admin can set outdated subscription threshold
   - Admins can see the list of users who haven't updated their subscription for (x) days.
 - **Time zone:**
-  - Main Admin can set the  timezone of the bot.
+  - Main Admin can set the timezone of the bot.
+- **Notifications:**
+  - Admins will now receive notification for low traffic users.
 
 ![1](https://github.com/user-attachments/assets/01ff31ce-649a-44a6-b194-7f0f2a523fad)
 ![2](https://github.com/user-attachments/assets/af96d86c-a8cd-47dc-9406-e48ff0ffc743)
@@ -244,3 +246,4 @@ If you need to manually edit the bot's configuration file after deployment:
 ### License
 
 This project is licensed under the MIT License.
+

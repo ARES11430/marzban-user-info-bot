@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { Context } from 'telegraf';
+import { getUserInfo, getUsersFromDB } from '../models/users';
 
 type DatabaseAdmin = {
   id: number;
@@ -8,9 +9,18 @@ type DatabaseAdmin = {
   username: string;
 };
 
+export type UserData = {
+  userId: string;
+  notified: boolean;
+  adminId: number;
+};
+
 const DATA_DIR = '/app/data';
 const CONFIG_FILE = 'config.json';
 const configFilePath = path.join(DATA_DIR, CONFIG_FILE);
+
+const USERS_FILE = 'users.json';
+const usersFilePath = path.join(DATA_DIR, USERS_FILE);
 
 // Ensure the directory exists
 const ensureDataDirectoryExists = async () => {
@@ -18,6 +28,88 @@ const ensureDataDirectoryExists = async () => {
     await fs.mkdir(DATA_DIR, { recursive: true });
   } catch (err) {
     console.error(`Error creating data directory at ${DATA_DIR}:`, err);
+  }
+};
+
+// Load users data from users.json
+export const loadUsersData = async () => {
+  try {
+    const data = await fs.readFile(usersFilePath, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error loading users data:', error);
+    return [];
+  }
+};
+
+// Update notified status for a user
+export const updateUserNotifiedStatus = async (
+  userId: string,
+  notified: boolean,
+  adminId: number
+) => {
+  const usersData: UserData[] = await loadUsersData();
+  const userIndex = usersData.findIndex(user => user.userId === userId);
+
+  if (userIndex >= 0) {
+    // Update existing user's notification status
+    usersData[userIndex].notified = notified;
+    usersData[userIndex].adminId = adminId; // Ensure adminId is updated
+  } else {
+    // Add new user to the data
+    usersData.push({ userId, notified, adminId });
+  }
+
+  await fs.writeFile(usersFilePath, JSON.stringify(usersData, null, 2));
+};
+
+// Function to check if the users.json file exists and contains data
+export const isUsersJsonPopulated = async (): Promise<boolean> => {
+  try {
+    const data = await fs.readFile(usersFilePath, 'utf-8');
+    const users = JSON.parse(data);
+    return Array.isArray(users) && users.length > 0;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      // File doesn't exist
+      return false;
+    }
+    console.error('Error checking users.json:', error);
+    return false;
+  }
+};
+
+export const populateUsersJson = async () => {
+  try {
+    const isPopulated = await isUsersJsonPopulated();
+
+    if (isPopulated) {
+      console.log('users.json is already populated.');
+      return;
+    }
+
+    // Fetch users with their admin IDs from the database
+    const users = await getUsersFromDB();
+    const usersData: UserData[] = [];
+
+    // Process each user to include their admin ID
+    for (const user of users) {
+      const userInfo = await getUserInfo(user.username);
+      if (typeof userInfo === 'string') continue; // user is not found so proceed to next user
+
+      usersData.push({
+        userId: user.username,
+        notified: false,
+        adminId: userInfo.adminId,
+      });
+    }
+
+    await fs.writeFile(usersFilePath, JSON.stringify(usersData, null, 2));
+    console.log(
+      'Successfully populated users.json with user data from the database.'
+    );
+  } catch (error) {
+    console.error('Error populating users.json:', error);
   }
 };
 

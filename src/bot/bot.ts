@@ -9,6 +9,7 @@ import {
   getUserInfo,
   IUserInfo,
 } from '../models/users';
+import { setupNotificationSystem } from '../notification/adminNotifications';
 import {
   addDatabaseAdmin,
   addTelegramAdminID,
@@ -837,6 +838,14 @@ async function formatUserInfo(userInfo: IUserInfo) {
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
+// Initialize notification system
+const notificationSystem = setupNotificationSystem({
+  bot,
+});
+
+// Start checking every hour (you can adjust the interval)
+notificationSystem.startNotificationSystem(1);
 
 initializeCommands()
   .then(() => {

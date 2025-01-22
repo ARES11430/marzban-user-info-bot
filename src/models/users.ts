@@ -49,12 +49,22 @@ interface IClient extends RowDataPacket {
   lastUpdate: Date;
 }
 
+interface IUsername extends RowDataPacket {
+  username: string;
+}
+
 export const getAdminID = async (username: string): Promise<number | null> => {
   const query = `SELECT id FROM admins WHERE username = ? LIMIT 1`;
 
   const [rows] = await pool.query<IAdmin[]>(query, [username]);
 
   return rows[0]?.id || null;
+};
+
+export const getUsersFromDB = async () => {
+  const query = `SELECT username FROM users`;
+  const [rows] = await pool.query<IUsername[]>(query);
+  return rows;
 };
 
 export const getUserInfo = async (

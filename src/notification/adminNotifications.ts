@@ -17,7 +17,7 @@ export const setupNotificationSystem = (params: NotificationSystem) => {
   const { bot } = params;
 
   const notifyAdminsAboutLowTraffic = async () => {
-    console.log('notifyAdminsAboutLowTraffic is called...');
+    console.log('Checking low traffic users...');
 
     try {
       const threshold = await getTrafficThreshold();
@@ -40,8 +40,7 @@ export const setupNotificationSystem = (params: NotificationSystem) => {
           continue; // Skip if already notified
         }
 
-        const message = `⚠️ Low Traffic Alert!\n\nUser: ${username}\nRemaining Traffic: ${remainingTraffic} GB
-        \n\nBelongs to: #${userInfo.belongsTo}`;
+        const message = `⚠️ Low Traffic Alert!\n\nUser: ${username}\nRemaining Traffic: ${remainingTraffic} GB`;
 
         // Find the admin for this user
         const ownerAdmin = admins.find(admin => admin.id === userInfo.adminId);

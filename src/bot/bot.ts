@@ -10,6 +10,7 @@ import {
   IUserInfo,
 } from '../models/users';
 import { setupNotificationSystem } from '../notification/adminNotifications';
+import { setupNodeNotificationSystem } from '../notification/nodesNotification';
 import {
   addDatabaseAdmin,
   addTelegramAdminID,
@@ -19,6 +20,7 @@ import {
   getTrafficThreshold,
   loadDatabaseAdmins,
   loadTelegramAdmins,
+  pingHost,
   removeDatabaseAdmin,
   removeTelegramAdminID,
   sendLongMessage,
@@ -42,6 +44,7 @@ const trafficThresholdSession = new Set<number>();
 const subThresholdSession = new Set<number>();
 const userInfoSession = new Set<number>();
 const timezoneSession = new Set<number>();
+const pingSession = new Set<number>();
 
 const DeviceClients = ['V2ray', 'V2box', 'Streisand', 'Nekoray'];
 
@@ -102,6 +105,7 @@ const mainAdminButtons = [
   [Markup.button.callback('Users Menu', 'user_management')],
   [Markup.button.callback('Clients Info', 'client_management')],
   [Markup.button.callback('Subscription Menu', 'sub_management')],
+  [Markup.button.callback('🏓 Ping Tool', 'start_ping')],
   [Markup.button.callback('Admin Management', 'admin_management')],
   [Markup.button.callback('Settings', 'settings')],
 ];
@@ -132,6 +136,17 @@ bot.command('commands', async ctx => {
     'Bellow is the List of commands\n available for you: ',
     Markup.inlineKeyboard(buttons)
   );
+});
+
+bot.action('start_ping', async ctx => {
+  if (!isMainAdmin(ctx)) {
+    ctx.reply('⚠️ This feature is only available for the main admin');
+    return;
+  }
+
+  const userId = ctx.from.id;
+  pingSession.add(userId);
+  ctx.reply('Please enter an IP address or domain to ping:');
 });
 
 bot.action('settings', async ctx => {
@@ -413,6 +428,48 @@ bot.on('text', async ctx => {
     }
 
     userInfoSession.delete(userId);
+    return;
+  }
+
+  if (pingSession.has(userId)) {
+    const host = ctx.message.text.trim();
+
+    // First check basic length constraints
+    if (host.length > 253 || host.length < 3) {
+      ctx.reply('❌ Invalid length (3-253 characters required)');
+      pingSession.delete(userId);
+      return;
+    }
+
+    // Then check complex pattern
+    if (
+      !/^(?!-)([a-zA-Z0-9-]{1,63}(?<!-)\.?)+$|^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/.test(
+        host
+      )
+    ) {
+      ctx.reply(
+        `❌ Invalid format. Valid formats:\n- example.com\n- 8.8.8.8\n- 2001:db8::1`
+      );
+      pingSession.delete(userId);
+      return;
+    }
+
+    try {
+      const processingMsg = await ctx.reply(`🔄 Pinging ${host}...`);
+      const result = await pingHost(host);
+
+      await ctx.telegram.editMessageText(
+        processingMsg.chat.id,
+        processingMsg.message_id,
+        undefined,
+        `📡 Ping Results for ${host}:\n\n<code>${result.slice(0, 4000)}</code>`,
+        { parse_mode: 'HTML' }
+      );
+    } catch (error: any) {
+      ctx.reply(`❌ Error pinging ${host}: ${error.message}`);
+    }
+
+    pingSession.delete(userId);
     return;
   }
 
@@ -846,6 +903,10 @@ const notificationSystem = setupNotificationSystem({
 
 // Start checking every hour (you can adjust the interval)
 notificationSystem.startNotificationSystem(1);
+
+// Start node notification services
+const nodeNotifier = setupNodeNotificationSystem({ bot });
+nodeNotifier.start(1);
 
 initializeCommands()
   .then(() => {

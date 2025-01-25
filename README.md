@@ -18,10 +18,13 @@ This bot helps **Marzban Admin Panel** users by providing details about expiring
   - Admins can see the list of users who haven't updated their subscription for (x) days.
 - **Time zone:**
   - Main Admin can set the timezone of the bot.
+- **Ping tool:**
+  - Main Admin can any valid ip or domain in bot.
 - **Notifications:**
   - Admins will now receive notification for low traffic users.
+  - Main Admin will now receives notification for Nodes status change.
 
-![1](https://github.com/user-attachments/assets/01ff31ce-649a-44a6-b194-7f0f2a523fad)
+![1](https://github.com/user-attachments/assets/dd32fa4f-3fbc-4528-8312-51b5ac6edf31)
 ![2](https://github.com/user-attachments/assets/af96d86c-a8cd-47dc-9406-e48ff0ffc743)
 
 ---
@@ -246,4 +249,3 @@ If you need to manually edit the bot's configuration file after deployment:
 ### License
 
 This project is licensed under the MIT License.
-

@@ -1,7 +1,11 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { Context } from 'telegraf';
+import { promisify } from 'util';
+import { getNodes } from '../models/nodes';
 import { getUserInfo, getUsersFromDB } from '../models/users';
+
+const exec = promisify(require('child_process').exec);
 
 type DatabaseAdmin = {
   id: number;
@@ -15,12 +19,38 @@ export type UserData = {
   adminId: number;
 };
 
+export interface NodeData {
+  nodeId: number;
+  lastStatus: string;
+  notified: boolean;
+}
+
 const DATA_DIR = '/app/data';
 const CONFIG_FILE = 'config.json';
 const configFilePath = path.join(DATA_DIR, CONFIG_FILE);
 
 const USERS_FILE = 'users.json';
 const usersFilePath = path.join(DATA_DIR, USERS_FILE);
+
+const NODES_FILE = 'nodes.json';
+const nodesFilePath = path.join(DATA_DIR, NODES_FILE);
+
+export const pingHost = async (host: string): Promise<string> => {
+  const platform = process.platform;
+  const command = platform === 'win32' ? 'ping -n 4' : 'ping -c 4';
+
+  try {
+    const { stdout } = await exec(`${command} ${escapeShellArg(host)}`);
+    return stdout;
+  } catch (error: any) {
+    return error.stdout || error.message;
+  }
+};
+
+// Security: Prevent command injection
+function escapeShellArg(arg: string) {
+  return `'${arg.replace(/'/g, "'\\''")}'`;
+}
 
 // Ensure the directory exists
 const ensureDataDirectoryExists = async () => {
@@ -84,7 +114,6 @@ export const populateUsersJson = async () => {
     const isPopulated = await isUsersJsonPopulated();
 
     if (isPopulated) {
-      console.log('users.json is already populated.');
       return;
     }
 
@@ -110,6 +139,53 @@ export const populateUsersJson = async () => {
     );
   } catch (error) {
     console.error('Error populating users.json:', error);
+  }
+};
+
+export const loadNodesData = async (): Promise<NodeData[]> => {
+  try {
+    const data = await fs.readFile(nodesFilePath, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error loading nodes data:', error);
+    return [];
+  }
+};
+
+export const updateNodeNotifiedStatus = async (
+  nodeId: number,
+  status: string,
+  notified: boolean
+) => {
+  const nodesData: NodeData[] = await loadNodesData();
+  const nodeIndex = nodesData.findIndex(node => node.nodeId === nodeId);
+
+  if (nodeIndex >= 0) {
+    nodesData[nodeIndex].lastStatus = status;
+    nodesData[nodeIndex].notified = notified;
+  } else {
+    nodesData.push({ nodeId, lastStatus: status, notified });
+  }
+
+  await fs.writeFile(nodesFilePath, JSON.stringify(nodesData, null, 2));
+};
+
+export const populateNodesJson = async () => {
+  try {
+    const existingData = await loadNodesData();
+    if (existingData.length > 0) return;
+
+    const nodes = await getNodes();
+    const nodesData: NodeData[] = nodes.map(node => ({
+      nodeId: node.id,
+      lastStatus: node.status,
+      notified: false,
+    }));
+
+    await fs.writeFile(nodesFilePath, JSON.stringify(nodesData, null, 2));
+    console.log('Successfully initialized nodes.json');
+  } catch (error) {
+    console.error('Error initializing nodes.json:', error);
   }
 };
 

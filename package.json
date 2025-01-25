@@ -1,6 +1,6 @@
 {
   "name": "marzban-user-info-bot",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "app.ts",
   "scripts": {
     "start": "node dist/app.js",
